@@ -491,6 +491,30 @@ body.live-only-mode nav { justify-content: flex-start; }
 input.photo-file-input { display:none; }
 
 
+
+/* ── SPLASH AFFICHE ── */
+#splash-screen {
+  position:fixed;inset:0;z-index:9999;
+  background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+#splash-screen img {
+  max-width:100%;max-height:90vh;object-fit:contain;
+  box-shadow:0 0 60px rgba(0,0,0,.8);
+}
+#splash-screen .splash-hint {
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.6);font-size:.85rem;letter-spacing:2px;
+  text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;
+  animation:lvBlink 2s ease-in-out infinite;
+  white-space:nowrap;
+}
+#splash-screen .splash-no-photo {
+  color:rgba(255,255,255,.3);font-size:1rem;letter-spacing:2px;
+  text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;
+}
+
 /* ── HORS CONCOURS ── */
 .hc-badge { display:inline-block;background:#e67e22;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle; }
 .hc-row td { opacity:.75; font-style:italic; }
@@ -576,6 +600,13 @@ input.photo-file-input { display:none; }
 </head>
 <body>
 
+<!-- ══ SPLASH AFFICHE (spectateurs) ══ -->
+<div id="splash-screen" style="display:none" onclick="splashEnter()">
+  <img id="splash-img" src="" alt="" style="display:none">
+  <div class="splash-no-photo" id="splash-no-photo" style="display:none">📺 Classements en direct</div>
+  <div class="splash-hint">Touchez pour accéder aux classements →</div>
+</div>
+
 <!-- ══ ÉCRAN MOT DE PASSE ══ -->
 <div id="password-screen">
   <header>
@@ -585,18 +616,11 @@ input.photo-file-input { display:none; }
       <div class="logo-sub">Gestionnaire de Compétition</div>
     </div>
   </header>
-  <div class="photo-frame-wrap" style="max-width:400px;margin:70px auto 12px">
-    <input type="file" accept="image/*" class="photo-file-input" id="pw-photo-input" onchange="photoLoad('pw-photo-input','pw-photo-img','pw-photo-frame')">
-    <div class="photo-frame" id="pw-photo-frame" onclick="document.getElementById('pw-photo-input').click()">
-      <div class="photo-frame-placeholder" id="pw-photo-placeholder">
-        <span>🖼️</span>
-        <p>Cliquez pour ajouter<br>une photo (JPG/PNG)</p>
-      </div>
-      <img id="pw-photo-img" src="" alt="" style="display:none">
-      <button class="photo-frame-remove" id="pw-photo-remove" style="display:none" onclick="event.stopPropagation();photoRemove('pw-photo-img','pw-photo-frame','pw-photo-placeholder','pw-photo-remove');photoRemoveFirebase()">✕</button>
-    </div>
+  <!-- Aperçu affiche sur l'écran d'accueil gestionnaire -->
+  <div id="pw-affiche-preview" style="max-width:300px;margin:60px auto 12px;display:none">
+    <img id="pw-affiche-img" src="" alt="" style="width:100%;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.4)">
   </div>
-  <div class="pw-card" style="margin-top:0">
+  <div class="pw-card" style="margin-top:12px">
     <div id="pw-comp-name" style="font-size:.78rem;color:#4caf50;text-align:center;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;min-height:18px;margin-bottom:2px"></div>
     <button type="button" class="pw-live-btn" onclick="pwGoLive()" style="width:100%;font-size:.85rem;padding:10px 16px;margin-bottom:4px">📺 Voir les classements en direct</button>
     <div class="pw-divider" style="margin:4px 0">ou</div>
@@ -916,6 +940,35 @@ input.photo-file-input { display:none; }
   </div>
 
   <!-- ── Engagements ── -->
+  <!-- ── Affiche de la compétition ── -->
+  <div class="comp-card" style="margin-top:16px">
+    <div class="comp-card-title">🖼️ Affiche de la compétition</div>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Cette affiche s'affiche en plein écran aux spectateurs avant d'accéder aux classements.</p>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div>
+        <input type="file" accept="image/*" id="comp-photo-input" style="display:none" onchange="photoLoad('comp-photo-input','comp-photo-img','comp-photo-frame')">
+        <div class="photo-frame" id="comp-photo-frame" onclick="document.getElementById('comp-photo-input').click()"
+          style="width:160px;aspect-ratio:210/297;border-radius:8px;overflow:hidden;border:2px dashed #444;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative">
+          <div class="photo-frame-placeholder" id="comp-photo-placeholder" style="padding:16px;text-align:center">
+            <span style="font-size:1.5rem">🖼️</span>
+            <p style="font-size:.72rem;margin-top:6px;color:var(--muted)">Cliquer pour<br>ajouter une affiche</p>
+          </div>
+          <img id="comp-photo-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover">
+          <button class="photo-frame-remove" id="comp-photo-remove" style="display:none"
+            onclick="event.stopPropagation();photoRemove('comp-photo-img','comp-photo-frame','comp-photo-placeholder','comp-photo-remove');photoRemoveFirebase()">✕</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <p style="font-size:.8rem;color:var(--muted);line-height:1.7">
+          • Format recommandé : <strong>A4 portrait</strong> (JPG ou PNG)<br>
+          • L'affiche est synchronisée en temps réel sur Firebase<br>
+          • Les spectateurs la verront dès que vous l'ajoutez<br>
+          • Cliquez sur ✕ pour la retirer
+        </p>
+      </div>
+    </div>
+  </div>
+
   <div id="comp-engagements" class="comp-section">
     <div class="comp-card">
       <div class="comp-card-title">📊 Résumé des engagements</div>
@@ -2049,13 +2102,40 @@ function photoLoad(inputId, imgId, frameId){
     }
     // Also save to localStorage as fallback
     try{ localStorage.setItem('ball_trap_affiche', e.target.result); }catch(e){}
+    // Update gestionnaire preview on password screen
+    updatePwAffichePreview(e.target.result);
   };
   reader.readAsDataURL(file);
+}
+
+function updatePwAffichePreview(dataUrl){
+  const wrap = document.getElementById('pw-affiche-preview');
+  const img  = document.getElementById('pw-affiche-img');
+  if(!wrap || !img) return;
+  if(dataUrl){
+    img.src = dataUrl;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+    img.src = '';
+  }
+}
+
+function splashEnter(){
+  // Hide splash, go straight to live classements
+  const splash = document.getElementById('splash-screen');
+  if(splash) splash.style.display = 'none';
+  document.getElementById('home-screen').style.display = 'flex';
+  setTimeout(()=>{
+    const liveBtn = document.querySelector('button.tab[onclick*="live"]');
+    if(liveBtn) liveBtn.click();
+  }, 80);
 }
 
 function photoRemoveFirebase(){
   if(window._fbSet) window._fbSet('affiche', null).catch(()=>{});
   try{ localStorage.removeItem('ball_trap_affiche'); }catch(e){}
+  updatePwAffichePreview(null);
 }
 function photoRemove(imgId, frameId, phId, rmId){
   const img   = document.getElementById(imgId);
@@ -2156,50 +2236,37 @@ function pwGoLive(){
   }
 
   function showNoComp(){
+    // Hide splash if shown
+    const splash = document.getElementById('splash-screen');
+    if(splash) splash.style.display = 'none';
     document.getElementById('home-screen').style.display='flex';
-    document.getElementById('home-main').innerHTML='<div style="text-align:center;padding:80px 20px;color:var(--muted)"><div style="font-size:3rem">📺</div><div style="font-size:1.2rem;margin-top:16px">Aucune compétition disponible.</div><button onclick="document.getElementById(\'home-screen\').style.display=\'none\';document.getElementById(\'password-screen\').style.display=\'flex\'" style="margin-top:24px;padding:12px 28px;background:none;border:2px solid #555;color:var(--muted);border-radius:10px;font-family:\'Barlow Condensed\',sans-serif;font-size:.95rem;letter-spacing:1px;cursor:pointer">← Retour</button></div>';
+    document.getElementById('home-main').innerHTML='<div style="text-align:center;padding:80px 20px;color:var(--muted)"><div style="font-size:3rem">📺</div><div style="font-size:1.2rem;margin-top:16px">Aucune compétition disponible.</div><button onclick="document.getElementById(\'home-screen\').style.display=\'none\';document.getElementById(\'splash-screen\').style.display=\'flex\'" style="margin-top:24px;padding:12px 28px;background:none;border:2px solid #555;color:var(--muted);border-radius:10px;font-family:\'Barlow Condensed\',sans-serif;font-size:.95rem;letter-spacing:1px;cursor:pointer">← Retour</button></div>';
   }
 
   function loadAfficheForSpectator(){
-    // Try Firebase first
+    // Show splash screen, then load photo from Firebase
+    const splash   = document.getElementById('splash-screen');
+    const splashImg = document.getElementById('splash-img');
+    const splashNP  = document.getElementById('splash-no-photo');
+    // Hide password screen, show splash
+    document.getElementById('password-screen').style.display = 'none';
+    if(splash) splash.style.display = 'flex';
+
+    function applyPhoto(dataUrl){
+      if(dataUrl && splashImg){
+        splashImg.src = dataUrl;
+        splashImg.style.display = 'block';
+        if(splashNP) splashNP.style.display = 'none';
+      } else {
+        if(splashImg) splashImg.style.display = 'none';
+        if(splashNP)  splashNP.style.display  = 'block';
+      }
+    }
+
     if(window._fbListen){
-      window._fbListen('affiche', (dataUrl) => {
-        const frame = document.getElementById('pw-photo-frame');
-        const img   = document.getElementById('pw-photo-img');
-        const ph    = document.getElementById('pw-photo-placeholder');
-        const rm    = document.getElementById('pw-photo-remove');
-        const inp   = document.getElementById('pw-photo-input');
-        if(!frame) return;
-        // Lock frame (no click, no upload)
-        frame.onclick = null;
-        frame.style.cursor = 'default';
-        frame.style.border = 'none';
-        if(inp) inp.style.display = 'none';
-        if(rm)  rm.style.display  = 'none';
-        if(dataUrl){
-          img.src = dataUrl;
-          img.style.display = 'block';
-          if(ph) ph.style.display = 'none';
-          frame.classList.add('has-image');
-        } else {
-          img.style.display = 'none';
-          // Hide placeholder entirely for spectators when no photo
-          if(ph) ph.style.display = 'none';
-          frame.style.minHeight = '0';
-          frame.style.border = 'none';
-        }
-      });
+      window._fbListen('affiche', applyPhoto);
     } else {
-      // Fallback localStorage
-      const dataUrl = localStorage.getItem('ball_trap_affiche');
-      const frame = document.getElementById('pw-photo-frame');
-      const img   = document.getElementById('pw-photo-img');
-      const ph    = document.getElementById('pw-photo-placeholder');
-      if(frame){ frame.onclick=null; frame.style.cursor='default'; frame.style.border='none'; }
-      if(dataUrl && img){
-        img.src=dataUrl; img.style.display='block';
-        if(ph) ph.style.display='none';
-      } else if(ph){ ph.style.display='none'; if(frame){frame.style.minHeight='0';} }
+      applyPhoto(localStorage.getItem('ball_trap_affiche'));
     }
   }
 
@@ -2215,6 +2282,27 @@ function appInit(){
     openCompetition(lastId);
   } else {
     renderHomeScreen();
+  }
+  // Load existing affiche for gestionnaire
+  function applyAfficheToManager(dataUrl){
+    if(!dataUrl) return;
+    // Update pw-affiche-preview
+    updatePwAffichePreview(dataUrl);
+    // Update comp-photo-frame if visible
+    const img   = document.getElementById('comp-photo-img');
+    const frame = document.getElementById('comp-photo-frame');
+    const ph    = document.getElementById('comp-photo-placeholder');
+    const rm    = document.getElementById('comp-photo-remove');
+    if(img){ img.src=dataUrl; img.style.display='block'; }
+    if(ph)  ph.style.display='none';
+    if(rm)  rm.style.display='flex';
+    if(frame){ frame.classList.add('has-image'); frame.style.cursor='default'; frame.onclick=null; }
+  }
+  if(window._fbListen){
+    window._fbListen('affiche', applyAfficheToManager);
+  } else {
+    const local = localStorage.getItem('ball_trap_affiche');
+    if(local) applyAfficheToManager(local);
   }
 }
 
